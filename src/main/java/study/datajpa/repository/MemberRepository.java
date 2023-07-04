@@ -1,11 +1,13 @@
 package study.datajpa.repository;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
@@ -57,4 +59,29 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //어차피 left join이면 카우트 쿼리를 분리하여 최적화시키면 성능을 올릴 수 있다. ( 자세히 다시 정리하기 )
     @Query(value = "SELECT m FROM Member m LEFT JOIN m.team t",countQuery = "SELECT COUNT(m.username) FROM Member m")
     Page<Member> findByAge(int age, PageRequest pageRequest);
+
+    @Modifying(clearAutomatically = true) // 수정 쿼리 사용시 어노테이션을 추가해야 한다. clearAutomatically 자동으로 엔티티매니저 클리어시키기
+    @Query("UPDATE Member m SET m.age = m.age+1 WHERE m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+
+
+    @Query("SELECT m FROM Member m LEFT JOIN FETCH m.team")
+    List<Member> findMemberFetchJoin();
+
+    @Override
+    @EntityGraph(attributePaths = {"team"}) // JOIN FETCH 를 어노테이션으로 사용하기
+    List<Member> findAll();
+
+    @EntityGraph(attributePaths = {"team"}) // 간단한 JOIN FETCH가 들어간 JPQL인 경우 어노테이션 사용하기, 복잡한 경우 JPQL 사용
+    //@EntityGraph("Member.all") // Named 활용하기
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+    // 읽기 전용으로 만들어 스냅샷을 만들지 않아 성능이 최적화된다. ( 변경갑지를 안하는 경우, 변경감지에 소모되는 성능을 줄이기 위함 )
+    // 그러나 굳이 이 설정을 넣는 수고를 들일정도로 효과적이지는 않다. 정말 필요한 경우에만 사용.
+    @QueryHints(value = @QueryHint(name="org.hibernate.readOnly",value="true"))
+    Member findReadOnlyByUsername(String username);
+
+    //SELECT FOR UPDATE   LOCK 기능을 JPA에서 쉽게 제공하고 있다.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }
