@@ -334,4 +334,52 @@ class MemberRepositoryTest {
         List<Member> result = memberRepository.findLockByUsername("member1");
     }
 
+    @Test
+    public void callCustom(){
+        List<Member> memberCustom = memberRepository.findMemberCustom();
+
+    }
+
+    @Test
+    public void specBasic(){
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member member1 = new Member("m1", 0, teamA);
+        Member member2 = new Member("m2", 0, teamA);
+
+        em.persist(member1);
+        em.persist(member2);
+
+        em.flush();
+        em.clear();
+
+        memberRepository.findAll();
+    }
+
+    @Test
+    public void projections(){
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member member1 = new Member("m1", 0, teamA);
+        Member member2 = new Member("m2", 0, teamA);
+
+        em.persist(member1);
+        em.persist(member2);
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<NestedClosedProjections> result = memberRepository.findProjectionByUsername("m1",NestedClosedProjections.class);
+        for (NestedClosedProjections nestedClosedProjection : result) {
+            String username = nestedClosedProjection.getUsername();
+            System.out.println("username = " + username);
+            String teamname = nestedClosedProjection.getTeam().getName();
+            System.out.println("teamname = " + teamname);
+        }
+
+    }
+
 }

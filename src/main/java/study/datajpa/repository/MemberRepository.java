@@ -1,12 +1,9 @@
 package study.datajpa.repository;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
@@ -16,7 +13,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member,Long> {
+
+// 스프링데이터JPA가 제공하는 구현체를 그대로 사용하면 구현해야 할 기능이 너무 많다.
+// 사용자 정의 리포지토리가 필요하다.
+// 단순한 쿼리 인터페이스 명으로 해결이 가능한 경우 스프링데이터JPA 제공 구현체
+// 복잡한 쿼리가 필요한 경우 사용자 정의 리포티지토리(QueryDSL,스프링JDBC템플릿,Mybatis)
+// 그런데 단순한 쿼리, 복잡한 쿼리든 간에 결굴은 MemberRepository로 합쳐진다.
+// 그러므로 핵심비즈니스로직이냐 화면에 맞춘 로직(DTO)이냐의 차이로 복잡한 경우에는 아예 Repository를 분리하는 것이 좋다.
+// 사용자 정의 쿼리가 꼭 분리가 아님을 알아야 한다. 결국은 합쳐지는 것이다.
+public interface MemberRepository extends JpaRepository<Member,Long>, MemberRepositoryCustom, JpaSpecificationExecutor<Member>{
 
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age); //파라미터가 두개까지는 메소드 이름으로 자동생성 사용, 넘어가면 JPQL로 풀기
     List<Member> findHelloBy(); //find...By 뒤에 아무것도 없으면 전체조회
@@ -84,4 +89,6 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //SELECT FOR UPDATE   LOCK 기능을 JPA에서 쉽게 제공하고 있다.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Member> findLockByUsername(String username);
+
+    <T> List<T> findProjectionByUsername(@Param("username") String username,Class<T> type);
 }
