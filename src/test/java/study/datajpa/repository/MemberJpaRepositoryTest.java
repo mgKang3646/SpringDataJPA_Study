@@ -20,6 +20,7 @@ class MemberJpaRepositoryTest {
 
     @Test
     public void testMember(){
+        System.out.println("memberJpaRepository.getClass().getName() = " + memberJpaRepository.getClass());
         Member member = new Member("usernameA");
         Member saveMember = memberJpaRepository.save(member);
         Member findMember = memberJpaRepository.find(saveMember.getId());

@@ -20,4 +20,6 @@ public class BaseEntity extends BaseTimeEntity { // BaseTimeEntity 시간은 어
 
     @LastModifiedBy
     private String lastModifiedBy;
+
+
 }

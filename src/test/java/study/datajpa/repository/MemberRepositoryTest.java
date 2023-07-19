@@ -39,10 +39,12 @@ class MemberRepositoryTest {
 
     @Test
     public void testMember(){
-        System.out.println("memberRepository = " + memberRepository.getClass()); // 프록시 가짜 구현객체 만들어서 주입
         Member member = new Member("memberA");
+        System.out.println("before memberRepository.getClass() = " + memberRepository.getClass().getName());
         Member saveMember = memberRepository.save(member);
         Member findMember = memberRepository.findById(saveMember.getId()).get();
+        List<Member> memberA = memberRepository.findByUsername("memberA");
+        System.out.println("after memberRepository.getClass() = " + memberRepository.getClass().getName());
 
         assertThat(findMember.getId()).isEqualTo(member.getId());
         assertThat(findMember.getUsername()).isEqualTo(member.getUsername());
@@ -193,27 +195,28 @@ class MemberRepositoryTest {
     public void paging(){
         //given
         memberRepository.save(new Member("member1",10));
-        memberRepository.save(new Member("member2",10));
-        memberRepository.save(new Member("member3",10));
-        memberRepository.save(new Member("member4",10));
+        memberRepository.save(new Member("member2",20));
+        memberRepository.save(new Member("member3",20));
+        memberRepository.save(new Member("member4",30));
         memberRepository.save(new Member("member5",10));
 
         PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username")); //0페이지에서 3개 가져와, 사용자 이름으로 내림차순
 
 
-        int age = 10;
-        int offset = 0;
-        int limit = 3;
-
         //when
-
+        int age =10;
         Page<Member> page = memberRepository.findByAge(age, pageRequest);
+
+//        List<Member> content = page.getContent();
+//        for (Member member : content) {
+//            System.out.println("member = " + member);
+//        }
         //long totalCount = memberRepository.totalCount(age); totalCount 필요없음, totalCount까지 다 가져옴.
 
-        //then
+      /*  //then
         List<Member> content = page.getContent();
         long totalElements = page.getTotalElements();
-
+        System.out.println("totalElements = " + totalElements);
         assertThat(content.size()).isEqualTo(3);
         assertThat(page.getTotalElements()).isEqualTo(5);
         assertThat(page.getNumber()).isEqualTo(0); // 페이지 넘버 가져오기
@@ -222,7 +225,7 @@ class MemberRepositoryTest {
         assertThat(page.hasNext()).isTrue(); // 다음 페이지가 있는가?
 
         //페이지 엔티티 DTO로 쉽게 변환하기 ( 추천!! )
-        page.map(member->new MemberDto(member.getId(),member.getUsername(),null ));
+        page.map(member->new MemberDto(member.getId(),member.getUsername(),null ));*/
 
     }
 

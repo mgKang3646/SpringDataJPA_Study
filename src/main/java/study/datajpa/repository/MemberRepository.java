@@ -4,6 +4,8 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
@@ -21,7 +23,7 @@ import java.util.Optional;
 // 그런데 단순한 쿼리, 복잡한 쿼리든 간에 결굴은 MemberRepository로 합쳐진다.
 // 그러므로 핵심비즈니스로직이냐 화면에 맞춘 로직(DTO)이냐의 차이로 복잡한 경우에는 아예 Repository를 분리하는 것이 좋다.
 // 사용자 정의 쿼리가 꼭 분리가 아님을 알아야 한다. 결국은 합쳐지는 것이다.
-public interface MemberRepository extends JpaRepository<Member,Long>, MemberRepositoryCustom, JpaSpecificationExecutor<Member>{
+public interface MemberRepository extends JpaRepository<Member,Long>, MemberRepositoryCustom { // JpaSpecificationExecutor<Member>
 
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age); //파라미터가 두개까지는 메소드 이름으로 자동생성 사용, 넘어가면 JPQL로 풀기
     List<Member> findHelloBy(); //find...By 뒤에 아무것도 없으면 전체조회
@@ -39,7 +41,7 @@ public interface MemberRepository extends JpaRepository<Member,Long>, MemberRepo
     // 복잡한 정적쿼리는 @Query로 해결하면 된다.
     // 복잡한 동적쿼리는 QueryDSL로 해결한다.
     @Query("SELECT m FROM Member m WHERE m.username = :username and m.age = :age")
-    List<Member> findUser(@Param("username") String usrename, @Param("age") int age);
+    List<Member> findUser(@Param("username") String username, @Param("age") int age);
 
     @Query("SELECT m.username FROM Member m ")
     List<String> findUsernameList();
@@ -57,13 +59,14 @@ public interface MemberRepository extends JpaRepository<Member,Long>, MemberRepo
     Member findMemberByUsername(String username); // 단건
     Optional<Member> findOptionalByUsername(String username); // 단건 Optional
 
-    //Page<Member> findByAge(int age, Pageable pageable);
+    //Slice<Member> findByAge(int age, Pageable pageable);
 
     //페이징 쿼리와 카운트 쿼리를 분리할 수 있음
     //페이징 쿼리가 복잡해지면 카운트 쿼리도 따라서 복잡해져서 성능이 떨어질때가 있음
     //어차피 left join이면 카우트 쿼리를 분리하여 최적화시키면 성능을 올릴 수 있다. ( 자세히 다시 정리하기 )
-    @Query(value = "SELECT m FROM Member m LEFT JOIN m.team t",countQuery = "SELECT COUNT(m.username) FROM Member m")
-    Page<Member> findByAge(int age, PageRequest pageRequest);
+    //@Query(value = "SELECT m FROM Member m LEFT JOIN m.team t",countQuery = "SELECT COUNT(m.username) FROM Member m")
+    @Query(value = "SELECT m FROM Member m LEFT JOIN m.team t ")
+    Page<Member> findByAge(int age, Pageable pageable);
 
     @Modifying(clearAutomatically = true) // 수정 쿼리 사용시 어노테이션을 추가해야 한다. clearAutomatically 자동으로 엔티티매니저 클리어시키기
     @Query("UPDATE Member m SET m.age = m.age+1 WHERE m.age >= :age")
